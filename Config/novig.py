@@ -47,12 +47,20 @@ class Novig:
 
             result[market_description]["liquidity"][side] = asdict(entry.liquidity_data)
 
+            if entry.stat_type == "Team Total":
+                split_name = entry.key_name.rsplit(" ", 2)[0]
+                bet_info = f"{entry.bet_info} {split_name}"
+            else:
+                bet_info = entry.bet_info if not entry.player_name else None
+
             result[market_description]["additional_data"] = {
                 "player_name": entry.player_name,
                 "stat_type": entry.stat_type,
                 "line": entry.line,
                 "game_title": entry.game_details.game_title,
                 "game_start_time": entry.game_details.game_start_time,
+                "type": "player" if entry.player_name else "Game",
+                "bet_info": bet_info
             }
 
         return [
@@ -223,19 +231,14 @@ class Novig:
                     continue
 
                 key_market_description = market.get("description", "")
-
-                if len(market.get("description").split(" ")) == 1:
-                    market_name = "Moneyline"
-                else:
-                    market_name = market.get("description", "").lower().split(" ")[-1]
-
+                market_name = market.get("type")
 
                 market_data_list.extend([
                     Player(
                         player_name=market.get("player", {}).get("full_name") if market.get("player") else None,
                         stat_type=self._map_data(market_name, league).get("stat_type"),
                         bet_info=outcome.get("description").title() if outcome.get("description") else None,
-                        line=self._get_line(outcome.get("description")) if outcome.get("description") else None,
+                        line=market.get("strike") if market.get("strike") != 0 else None,
                         key_name=key_market_description,
                         orders=[
                             Orders(
@@ -275,4 +278,35 @@ class Novig:
 
             return dict(results)
 
+    @classmethod
+    async def get_raw_data(cls, leagues: list):
+        """Fetch raw market data for all leagues without filtering, grouped by league."""
+        api = NovigAPI()
 
+        async with aiohttp.ClientSession() as session:
+            # Fetch league-level data
+            league_responses = await asyncio.gather(
+                *(api.query_caller(session, "league", league=league) for league in leagues)
+            )
+
+            league_data = {league: resp for league, resp in zip(leagues, league_responses)}
+
+            # For each league, fetch markets for all event IDs
+            results = {}
+            for league, resp in league_data.items():
+                event_ids = [
+                    event.get("id")
+                    for event in resp.get("data", {}).get("event", [])
+                    if event.get("id")
+                ]
+
+                if not event_ids:
+                    results[league] = []
+                    continue
+
+                market_responses = await asyncio.gather(
+                    *(api.query_caller(session, "market", event_id) for event_id in event_ids)
+                )
+                results[league] = market_responses
+
+            return results

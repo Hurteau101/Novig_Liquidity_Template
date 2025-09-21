@@ -74,6 +74,8 @@ class NovigAPI:
                 }
                 markets {
                   description
+                  type
+                  strike
 
                   player {
                     full_name
