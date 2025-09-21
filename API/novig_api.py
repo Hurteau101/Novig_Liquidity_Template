@@ -1,7 +1,3 @@
-import aiohttp
-import requests
-
-
 class NovigAPI:
     async def query_caller(self, session, query_parameter, league=None, event_id=None):
         """Returns a GraphQL query based on the provided query parameter."""
