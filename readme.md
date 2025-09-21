@@ -152,6 +152,13 @@ if __name__ == "__main__":
     results = asyncio.run(novig.run())
     print(results)
 ```
+```python
+if __name__ == "__main__":
+   raw = asyncio.run(Novig.get_raw_data(["NFL"]))
+   import json
+   with open("raw.json", "w") as f:
+        json.dump(raw, f, indent=4)
+```
 
 ## Filter Types
 

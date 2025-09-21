@@ -310,3 +310,39 @@ class Novig:
                 results[league] = market_responses
 
             return results
+
+
+if __name__ == "__main__":
+    # Load filters from file
+    import json
+    with open("filters.json", "r") as f:
+        filters = json.load(f)
+
+    # Choose your filter type and amounts
+    total_and_difference_filter = {
+        # "filter_type": "total_difference",
+        "filter_type": "total_and_difference",
+        "difference_amount": 0,
+        "highest_order_amount": 0
+    }
+
+    # OR
+
+    total_difference_filter = {
+        "filter_type": "total_difference",
+        "difference_amount": 0,
+    }
+
+    # Create Novig instance
+    novig = Novig(filters=filters, filter_amount_dict=total_and_difference_filter)
+
+    # Run it
+    results = asyncio.run(novig.run())
+    with open("results.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+# if __name__ == "__main__":
+#     raw = asyncio.run(Novig.get_raw_data(["NFL"]))
+#     import json
+#     with open("raw.json", "w") as f:
+#         json.dump(raw, f, indent=4)
