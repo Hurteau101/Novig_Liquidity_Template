@@ -1,3 +1,3 @@
-from novig import Novig
+from .novig import Novig
 
 __all__ = ["Novig"]
