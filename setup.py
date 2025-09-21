@@ -5,7 +5,8 @@ setup(
     version="1.0.0",
     description="A Novig Wrapper with filtering and validation",
     author="Devon Hurteau",
-    packages=find_packages(),
+    packages=["novig"],
+    package_dir={"novig": "Novig"},
     install_requires=[
         "aiohttp>=3.12.0",
         "redis>=6.4.0",
