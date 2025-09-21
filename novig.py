@@ -2,8 +2,8 @@ import asyncio
 from collections import defaultdict
 from dataclasses import asdict
 import aiohttp
-from models import FilterList, LiquidityData, GameDetails, Player, Orders
-from novig_api import NovigAPI
+from .models import FilterList, LiquidityData, GameDetails, Player, Orders
+from .novig_api import NovigAPI
 
 class Novig:
     def __init__(self, filters, filter_amount_dict):
