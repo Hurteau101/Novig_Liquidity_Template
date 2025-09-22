@@ -21,9 +21,15 @@ class NovigAPI:
     async def __default_caller(query, session):
         headers = {"Content-Type": "application/json"}
         async with session.post("https://gql.novig.us/v1/graphql", headers=headers, json=query) as response:
+            data = await response.json()
+            if data.get("errors"):
+                print(data["errors"])
+                return {"data": {"event": []}}
+
             if response.status == 200:
-                return await response.json()
-            return None
+                return data
+
+            return {"data": {"event": []}}
 
     @staticmethod
     def __league_caller(league):
