@@ -123,18 +123,34 @@ class Novig:
         results = []
 
         for data in market_data:
-            over_liquidity_amount = (
-                data.get("liquidity", {})
-                .get("over", {})
-                .get("highest_order", {})
-                .get("total_liquidity", 0)
-            )
-            under_liquidity_amount = (
-                data.get("liquidity", {})
-                .get("under", {})
-                .get("highest_order", {})
-                .get("total_liquidity", 0)
-            )
+            liquidity = data.get("liquidity", {})
+
+            if "over" in liquidity and "under" in liquidity:
+                over_liquidity_amount = (
+                    liquidity.get("over", {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+                under_liquidity_amount = (
+                    liquidity.get("under", {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+            else:
+                sides = list(liquidity.keys())
+                if len(sides) < 2:
+                    continue
+
+                over_liquidity_amount = (
+                    liquidity.get(sides[0], {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+                under_liquidity_amount = (
+                    liquidity.get(sides[1], {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
 
             liqudity_difference = round(abs(over_liquidity_amount - under_liquidity_amount), 2)
 
@@ -149,18 +165,35 @@ class Novig:
         results = []
 
         for data in market_data:
-            over_liquidity_amount = (
-                data.get("liquidity", {})
-                .get("over", {})
-                .get("highest_order", {})
-                .get("total_liquidity", 0)
-            )
-            under_liquidity_amount = (
-                data.get("liquidity", {})
-                .get("under", {})
-                .get("highest_order", {})
-                .get("total_liquidity", 0)
-            )
+            liquidity = data.get("liquidity", {})
+
+            if "over" in liquidity and "under" in liquidity:
+                over_liquidity_amount = (
+                    liquidity.get("over", {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+                under_liquidity_amount = (
+                    liquidity.get("under", {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+            else:
+                sides = list(liquidity.keys())
+                if len(sides) < 2:
+                    continue
+
+                over_liquidity_amount = (
+                    liquidity.get(sides[0], {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+                under_liquidity_amount = (
+                    liquidity.get(sides[1], {})
+                    .get("highest_order", {})
+                    .get("total_liquidity", 0)
+                )
+
 
             liqudity_difference = round(abs(over_liquidity_amount - under_liquidity_amount), 2)
 
@@ -314,7 +347,7 @@ class Novig:
 
             return results
 
-
+#
 # if __name__ == "__main__":
 #     # Load filters from file
 #     import json
