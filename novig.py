@@ -196,7 +196,7 @@ class Novig:
     def calculate_liquidity(qty, price):
         return (1-price) * (qty / 100)
 
-    def _get_highest_order(self, orders, direction_description, link_id):
+    def _get_highest_order(self, orders, direction_description, link_id, stat_type):
         if not orders:
             return None
 
@@ -207,7 +207,10 @@ class Novig:
             order.get("price", 0) * order.get("qty", 0) for order in orders
         ) / total_qty
 
-        side = "over" if "over" in direction_description.lower() else "under"
+        if stat_type == "Moneyline" or stat_type == "Spread":
+            side = direction_description
+        else:
+            side = "over" if "over" in direction_description.lower() else "under"
 
         return {
             "total_win": round(highest["qty"] / 100, 2),
@@ -257,7 +260,7 @@ class Novig:
                             if order.get("status") == "OPEN"
                         ],
                         liquidity_data=LiquidityData(
-                            highest_order=self._get_highest_order(outcome.get("orders", []), outcome.get("description"), outcome.get("id"))
+                            highest_order=self._get_highest_order(outcome.get("orders", []), outcome.get("description"), outcome.get("id"), self._map_data(market_name, league).get("stat_type"),)
                         ),
                         game_details=GameDetails(
                             game_title=event.get("description"),
@@ -312,34 +315,34 @@ class Novig:
             return results
 
 
-if __name__ == "__main__":
-    # Load filters from file
-    import json
-    with open("filters.json", "r") as f:
-        filters = json.load(f)
-
-    # Choose your filter type and amounts
-    total_and_difference_filter = {
-        # "filter_type": "total_difference",
-        "filter_type": "total_and_difference",
-        "difference_amount": 0,
-        "highest_order_amount": 0
-    }
-
-    # OR
-
-    total_difference_filter = {
-        "filter_type": "total_difference",
-        "difference_amount": 0,
-    }
-
-    # Create Novig instance
-    novig = Novig(filters=filters, filter_amount_dict=total_and_difference_filter)
-
-    # Run it
-    results = asyncio.run(novig.run())
-    with open("results.json", "w") as f:
-        json.dump(results, f, indent=4)
+# if __name__ == "__main__":
+#     # Load filters from file
+#     import json
+#     with open("filters.json", "r") as f:
+#         filters = json.load(f)
+#
+#     # # Choose your filter type and amounts
+#     # total_and_difference_filter = {
+#     #     # "filter_type": "total_difference",
+#     #     "filter_type": "total_and_difference",
+#     #     "difference_amount": 0,
+#     #     "highest_order_amount": 0
+#     # }
+#
+#     # OR
+#
+#     total_difference_filter = {
+#         "filter_type": "total_difference",
+#         "difference_amount": 0,
+#     }
+#
+#     # Create Novig instance
+#     novig = Novig(filters=filters, filter_amount_dict=total_difference_filter)
+#
+#     # Run it
+#     results = asyncio.run(novig.run())
+#     with open("results.json", "w") as f:
+#         json.dump(results, f, indent=4)
 
 # if __name__ == "__main__":
 #     raw = asyncio.run(Novig.get_raw_data(["NFL"]))
