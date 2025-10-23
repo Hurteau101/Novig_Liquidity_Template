@@ -5,6 +5,7 @@ import aiohttp
 from .models import FilterList, LiquidityData, GameDetails, Player, Orders
 from .novig_api import NovigAPI
 
+
 class Novig:
     def __init__(self, filters, filter_amount_dict):
         self.filters = FilterList(filter_data=filters)
@@ -27,9 +28,7 @@ class Novig:
 
         tasks = [self.fetch_and_filter(session, event_id, league) for event_id in league_ids]
         results = await asyncio.gather(*tasks)
-
         flat_results = [market for sublist in results for market in sublist]
-
         return league, flat_results
 
     async def fetch_and_filter(self, session, event_id, league):
@@ -255,7 +254,8 @@ class Novig:
             "cost_avg_odds": round(self.price_to_american(weighted_avg_price), 2),
             "side": side,
             "outcome_id": link_id,
-            "mobile_link": f"https://novig.onelink.me/JHQQ/events/{link_id}",
+            # "mobile_link": f"https://novig.onelink.me/JHQQ/events/{link_id}",
+            "mobile_link": f"novigapp://events/{link_id}",
             "desktop_link": f"https://app.novig.us/events/{link_id}"
         }
 
@@ -349,34 +349,34 @@ class Novig:
             return results
 
 #
-# if __name__ == "__main__":
-#     # Load filters from file
-#     import json
-#     with open("filters.json", "r") as f:
-#         filters = json.load(f)
-#
-#     # # Choose your filter type and amounts
-#     # total_and_difference_filter = {
-#     #     # "filter_type": "total_difference",
-#     #     "filter_type": "total_and_difference",
-#     #     "difference_amount": 0,
-#     #     "highest_order_amount": 0
-#     # }
-#
-#     # OR
-#
-#     total_difference_filter = {
-#         "filter_type": "total_difference",
-#         "difference_amount": 0,
-#     }
-#
-#     # Create Novig instance
-#     novig = Novig(filters=filters, filter_amount_dict=total_difference_filter)
-#
-#     # Run it
-#     results = asyncio.run(novig.run())
-#     with open("results.json", "w") as f:
-#         json.dump(results, f, indent=4)
+if __name__ == "__main__":
+    # Load filters from file
+    import json
+    with open("filters.json", "r") as f:
+        filters = json.load(f)
+
+    # # Choose your filter type and amounts
+    # total_and_difference_filter = {
+    #     # "filter_type": "total_difference",
+    #     "filter_type": "total_and_difference",
+    #     "difference_amount": 0,
+    #     "highest_order_amount": 0
+    # }
+
+    # OR
+
+    total_difference_filter = {
+        "filter_type": "total_difference",
+        "difference_amount": 0,
+    }
+
+    # Create Novig instance
+    novig = Novig(filters=filters, filter_amount_dict=total_difference_filter)
+
+    # Run it
+    results = asyncio.run(novig.run())
+    with open("results.json", "w") as f:
+        json.dump(results, f, indent=4)
 
 # if __name__ == "__main__":
 #     raw = asyncio.run(Novig.get_raw_data(["NFL"]))
