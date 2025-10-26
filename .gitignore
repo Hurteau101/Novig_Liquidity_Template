@@ -4,3 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 .idea/
+Internal.md
+dist/
+build/
+*.egg-info/

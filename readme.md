@@ -5,25 +5,11 @@ This package helps you fetch sports market data and filter it based on liquidity
 
 ## Installation
 
-Clone the repo and install locally:
-
 ```bash
-# Clone the repository
-git clone https://github.com/Hurteau101/Novig_Liquidity_Template.git
-cd Novig_Liquidity_Template
-
-# Install in editable/development mode
-pip install -e .
-```
-
-Or install directly with pip:
-
-```bash
-pip install git+https://github.com/Hurteau101/Novig_Liquidity_Template.git@b483d529c6474badb229b17d80e15851778c42a6
+pip install novig-liquidity
 ```
 
 ## Requirements
-
 Dependencies are listed in `requirements.txt` and are installed automatically. Core ones include:
 
 - `aiohttp`
