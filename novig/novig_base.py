@@ -2,8 +2,8 @@ import asyncio
 from collections import defaultdict
 from dataclasses import asdict
 import aiohttp
-from .models import FilterList, LiquidityData, GameDetails, Player, Orders
-from .novig_api import NovigAPI
+from models import FilterList, LiquidityData, GameDetails, Player, Orders
+from novig_api import NovigAPI
 
 
 class Novig:
@@ -250,7 +250,9 @@ class Novig:
             order.get("price", 0) * order.get("qty", 0) for order in orders
         ) / total_qty
 
-        if stat_type == "Moneyline" or stat_type == "Spread":
+        stat_type = stat_type.lower()
+
+        if stat_type == "moneyline" or stat_type == "spread":
             side = direction_description
         else:
             side = "over" if "over" in direction_description.lower() else "under"
@@ -366,8 +368,6 @@ if __name__ == "__main__":
 #     import json
 #     with open("nba_filters.json", "r") as f:
 #         nba_data = json.load(f)
-#         nba_mainlines = {"NBA": nba_data.get("NBA", {}).get("NBA_Mainlines")}
-#         nba_props = {"NBA": nba_data.get("NBA", {}).get("NBA_Props")}
 #
 #     # Choose your filter type and amounts
 #     total_and_difference_filter = {
@@ -379,19 +379,19 @@ if __name__ == "__main__":
 #
 #     # OR
 #
-#     # total_difference_filter = {
-#     #     "filter_type": "total_difference",
-#     #     "difference_amount": 0,
-#     # }
-#     #
+#     total_difference_filter = {
+#         "filter_type": "total_difference",
+#         "difference_amount": 0,
+#     }
+#
 #     # # Create Novig instance
-#     novig = Novig(filters=nba_mainlines, filter_amount_dict=total_and_difference_filter)
+#     novig = Novig(filters=nba_data, filter_amount_dict=total_difference_filter)
 #
 #     # Run it
 #     results = asyncio.run(novig.run())
 #     with open("results.json", "w") as f:
 #         json.dump(results, f, indent=4)
-#
+# #
 # # if __name__ == "__main__":
 # #     raw = asyncio.run(Novig.get_raw_data(["NFL"]))
 # #     import json

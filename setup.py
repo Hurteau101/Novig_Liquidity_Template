@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name="novig_liquidity",
-    version="1.0.2",
+    version="1.0.5",
     description="A Python wrapper for the Novig API with built-in filtering and liquidity validation.",
     author="Devon H",
     url="https://github.com/Hurteau101/Novig_Liquidity_Template",
     license="MIT",
-    packages=find_packages(),
+    packages=find_packages(include=["novig", "novig.*"]),
     install_requires=[
         "aiohappyeyeballs==2.6.1",
         "aiohttp==3.12.15",
