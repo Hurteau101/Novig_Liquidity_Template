@@ -2,8 +2,8 @@ import asyncio
 from collections import defaultdict
 from dataclasses import asdict
 import aiohttp
-from models import FilterList, LiquidityData, GameDetails, Player, Orders
-from novig_api import NovigAPI
+from .models import FilterList, LiquidityData, GameDetails, Player, Orders
+from .novig_api import NovigAPI
 
 
 class Novig:
@@ -266,8 +266,7 @@ class Novig:
             "cost_avg_odds": round(self.price_to_american(weighted_avg_price), 2),
             "side": side,
             "outcome_id": link_id,
-            # "mobile_link": f"https://novig.onelink.me/JHQQ/events/{link_id}",
-            "mobile_link": f"novigapp://events/{link_id}",
+            "mobile_link": f"https://novig.onelink.me/JHQQ/events/{link_id}",
             "desktop_link": f"https://app.novig.us/events/{link_id}"
         }
 
