@@ -243,9 +243,15 @@ class Novig:
         if not orders:
             return None
 
+
+
         highest = max(orders, key=lambda o: o["qty"] * o["price"])
         total_liquidity = sum(self.calculate_liquidity(order.get("qty"), order.get("price")) for order in orders)
         total_qty = sum(order.get("qty", 0) for order in orders)
+
+        if total_qty == 0:
+            return None
+
         weighted_avg_price = sum(
             order.get("price", 0) * order.get("qty", 0) for order in orders
         ) / total_qty
@@ -313,7 +319,10 @@ class Novig:
                         )
                     )
                     for outcome in market.get("outcomes", [])
-                    if any(order.get("status") == "OPEN" for order in outcome.get("orders", [])) and self._map_data(market_name, league).get("valid")
+                    if any(
+                        order.get("status") == "OPEN" for order in outcome.get("orders", [])
+                    ) and sum(order.get("qty", 0) for order in outcome.get("orders", [])) >= 1 and
+                       self._map_data(market_name, league).get("valid")
                 ])
         return market_data_list
 
