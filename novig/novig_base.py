@@ -5,7 +5,6 @@ import aiohttp
 from .models import FilterList, LiquidityData, GameDetails, Player, Orders
 from .novig_api import NovigAPI
 
-
 class Novig:
     def __init__(self, filters, filter_amount_dict):
         self.filters = FilterList(filter_data=filters)
@@ -17,7 +16,6 @@ class Novig:
         return [
             league_id
             for league in (league_info.get("data", {}).get("event", []))
-            # if (scheduled := league.get("game", {}).get("scheduled_start")) and self.compare_dates(scheduled) ## Uncommented after testing
             if (league_id := league.get("id"))
         ]
 
@@ -88,8 +86,8 @@ class Novig:
         """Apply the configured filter to market_data based on filter_dict."""
 
         filters = {
-            "total_and_difference": self._difference_and_total_filter,
-            "total_difference": self._total_difference,
+            "liquidity_difference_and_highest_order": self._liquidity_difference_and_highest_order,
+            "liquidity_difference": self._liquidity_difference,
         }
 
         filter_type = self.filter_dict.get("filter_type")
@@ -99,27 +97,27 @@ class Novig:
                 f"Options are: {', '.join(filters.keys())}"
             )
 
-        if filter_type == "total_and_difference":
+        if filter_type == "liquidity_difference_and_highest_order":
             diff = self.filter_dict.get("difference_amount")
             highest = self.filter_dict.get("highest_order_amount")
 
             if diff is None or highest is None:
                 raise ValueError(
                     "'difference_amount' and 'highest_order_amount' must be provided "
-                    "for 'total_and_difference'."
+                    "for 'liquidity_difference_and_highest_order'."
                 )
             return filters[filter_type](diff, highest, market_data)
 
-        if filter_type == "total_difference":
+        if filter_type == "liquidity_difference":
             diff = self.filter_dict.get("difference_amount")
             if diff is None:
-                raise ValueError("'difference_amount' must be provided for 'total_difference'.")
+                raise ValueError("'difference_amount' must be provided for 'liquidity_difference'.")
             return filters[filter_type](diff, market_data)
 
         return market_data
 
-    def _total_difference(self, difference_amount, market_data):
-       # Filter markets where the difference between over and under liquidity meets or exceeds the specified amount
+    def _liquidity_difference(self, difference_amount, market_data):
+        """Filter markets where the liquidity difference is greater than or equal to the specified amount."""
         results = []
 
         for data in market_data:
@@ -160,8 +158,9 @@ class Novig:
 
         return results
 
-    def _difference_and_total_filter(self, difference_amount, highest_order_amount, market_data):
-        # Filter markets where the difference between over and under liquidity meets or exceeds the specified amount
+    def _liquidity_difference_and_highest_order(self, difference_amount, highest_order_amount, market_data):
+        """Filter markets where the liquidity difference is greater than or equal to the specified amount
+        and at least one side has a highest order liquidity left greater than or equal to the specified amount."""
         results = []
 
         for data in market_data:
@@ -196,9 +195,6 @@ class Novig:
 
 
             liqudity_difference = round(abs(over_liquidity_amount - under_liquidity_amount), 2)
-
-            # over_highest_amount = data.get("liquidity", {}).get("over", {}).get("highest_order")
-            # under_highest_amount = data.get("liquidity", {}).get("under", {}).get("highest_order")
 
             keys = list(liquidity.keys())
 
@@ -242,8 +238,6 @@ class Novig:
     def _get_highest_order(self, orders, direction_description, link_id, stat_type):
         if not orders:
             return None
-
-
 
         highest = max(orders, key=lambda o: o["qty"] * o["price"])
         total_liquidity = sum(self.calculate_liquidity(order.get("qty"), order.get("price")) for order in orders)
@@ -367,41 +361,3 @@ class Novig:
                 results[league] = market_responses
 
             return results
-
-#
-if __name__ == "__main__":
-    pass
-
-#     # Load filters from file
-#     import json
-#     with open("nba_filters.json", "r") as f:
-#         nba_data = json.load(f)
-#
-#     # Choose your filter type and amounts
-#     total_and_difference_filter = {
-#         # "filter_type": "total_difference",
-#         "filter_type": "total_and_difference",
-#         "difference_amount": 1000,
-#         "highest_order_amount": 500
-#     }
-#
-#     # OR
-#
-#     total_difference_filter = {
-#         "filter_type": "total_difference",
-#         "difference_amount": 0,
-#     }
-#
-#     # # Create Novig instance
-#     novig = Novig(filters=nba_data, filter_amount_dict=total_difference_filter)
-#
-#     # Run it
-#     results = asyncio.run(novig.run())
-#     with open("results.json", "w") as f:
-#         json.dump(results, f, indent=4)
-# #
-# # if __name__ == "__main__":
-# #     raw = asyncio.run(Novig.get_raw_data(["NFL"]))
-# #     import json
-# #     with open("raw.json", "w") as f:
-# #         json.dump(raw, f, indent=4)

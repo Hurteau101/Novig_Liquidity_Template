@@ -119,8 +119,7 @@ if __name__ == "__main__":
 
     # Choose your filter type and amounts
     total_and_difference_filter = {
-        # "filter_type": "total_difference",
-        "filter_type": "total_and_difference",
+        "filter_type": "liquidity_difference_and_highest_order",
         "difference_amount": 3000,
         "highest_order_amount": 1500
     }
@@ -128,11 +127,9 @@ if __name__ == "__main__":
     # OR
     
     total_difference_filter = {
-        "filter_type": "total_difference",
+        "filter_type": "liquidity_difference",
         "difference_amount": 3000,
     }
-        
-    
 
     # Create Novig instance
     novig = Novig(filters=filters, filter_amount_dict=total_and_difference_filter)
@@ -153,10 +150,10 @@ if __name__ == "__main__":
 
 Two filter types are currently supported:
 
-1. **`total_difference`**  
+1. **`liquidity_difference`**  
    Keeps markets where the liquidity difference between over/under is at least `difference_amount`.
 
-2. **`total_and_difference`**  
+2. **`liquidity_difference_and_highest_order`**  
    Keeps markets where:
    - Liquidity difference ≥ `difference_amount`, **and**
    - Either over/under side has a highest order with `liquidity_left` ≥ `highest_order_amount`.
