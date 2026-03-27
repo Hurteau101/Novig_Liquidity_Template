@@ -1,3 +1,5 @@
+import asyncio
+
 class NovigAPI:
     async def query_caller(self, session, query_parameter, league=None, event_id=None):
         """Returns a GraphQL query based on the provided query parameter."""
@@ -18,18 +20,28 @@ class NovigAPI:
         return await NovigAPI.__default_caller(query_type[query_parameter](arg), session)
 
     @staticmethod
-    async def __default_caller(query, session):
+    async def __default_caller(query, session, retries=3, backoff=1.0):
         headers = {"Content-Type": "application/json"}
-        async with session.post("https://gql.novig.us/v1/graphql", headers=headers, json=query) as response:
-            data = await response.json()
-            if data.get("errors"):
-                print(data["errors"])
-                return {"data": {"event": []}}
+        for attempt in range(retries):
+            async with session.post("https://gql.novig.us/v1/graphql", headers=headers, json=query) as response:
+                data = await response.json()
 
-            if response.status == 200:
-                return data
+                if data.get("errors"):
+                    errors = data["errors"]
+                    is_timeout = any(
+                        e.get("extensions", {}).get("code") == "time-limit-exceeded"
+                        for e in errors
+                    )
+                    if is_timeout and attempt < retries - 1:
+                        wait = backoff * (2 ** attempt)
+                        await asyncio.sleep(wait)
+                        continue
+                    return {"data": {"event": []}}
 
-            return {"data": {"event": []}}
+                if response.status == 200:
+                    return data
+
+        return {"data": {"event": []}}
 
     @staticmethod
     def __league_caller(league):
@@ -58,15 +70,15 @@ class NovigAPI:
         }
 
     @staticmethod
-    def novig_market_caller(event_id):
+    def novig_market_caller(event_ids):
         """ Constructs a GraphQL query to fetch market data for a specific event."""
         return {
             "query": """
-            query ($eventId: uuid!) {
+            query ($eventIds: [uuid!]!) {
               event(
                 where: {
                   _and: [
-                    { id: { _eq: $eventId } },
+                    { id: { _in: $eventIds } },
                     { _or: [
                       { status: { _eq: "OPEN_PREGAME" } }
                     ]}
@@ -82,11 +94,9 @@ class NovigAPI:
                   description
                   type
                   strike
-
                   player {
                     full_name
                   }
-
                   outcomes(
                     where: {
                       _or: [
@@ -118,6 +128,6 @@ class NovigAPI:
             }
             """,
             "variables": {
-                "eventId": event_id
+                "eventIds": event_ids
             }
         }

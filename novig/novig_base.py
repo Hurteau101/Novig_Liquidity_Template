@@ -9,7 +9,7 @@ class Novig:
     def __init__(self, filters, filter_amount_dict):
         self.filters = FilterList(filter_data=filters)
         self._novig_api = NovigAPI()
-        self.filter_dict = filter_amount_dict
+        self.filter_dict = filter_amount_dict or {}
 
     def get_league_ids(self, league_info):
         """Get all the league IDs for a given league that are scheduled within the next 24 hours."""
@@ -22,10 +22,13 @@ class Novig:
 
     async def fetch_data(self, session, league):
         """Fetch data for a specific league and filter it based on the league's events."""
-        league_ids = self.get_league_ids(await self._novig_api.query_caller(session, "league", league=league))
+        event_ids = self.get_league_ids(await self._novig_api.query_caller(session, "league", league=league))
+        event_id_list = [event_ids[i:i + 10] for i in range(0, len(event_ids), 10)]
 
-        tasks = [self.fetch_and_filter(session, event_id, league) for event_id in league_ids]
+        tasks = [self.fetch_and_filter(session, event_id, league) for event_id in event_id_list]
         results = await asyncio.gather(*tasks)
+
+
         flat_results = [market for sublist in results for market in sublist]
         return league, flat_results
 
@@ -85,12 +88,16 @@ class Novig:
     def _conditional_filter(self, market_data: list) -> list:
         """Apply the configured filter to market_data based on filter_dict."""
 
+        filter_type = self.filter_dict.get("filter_type")
+
+        if filter_type is None:
+            return market_data
+
         filters = {
             "liquidity_difference_and_highest_order": self._liquidity_difference_and_highest_order,
             "liquidity_difference": self._liquidity_difference,
         }
 
-        filter_type = self.filter_dict.get("filter_type")
         if filter_type not in filters:
             raise ValueError(
                 f"Invalid filter_type: {filter_type}. "
