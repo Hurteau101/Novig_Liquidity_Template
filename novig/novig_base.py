@@ -22,13 +22,10 @@ class Novig:
 
     async def fetch_data(self, session, league):
         """Fetch data for a specific league and filter it based on the league's events."""
-        event_ids = self.get_league_ids(await self._novig_api.query_caller(session, "league", league=league))
-        event_id_list = [event_ids[i:i + 10] for i in range(0, len(event_ids), 10)]
+        league_ids = self.get_league_ids(await self._novig_api.query_caller(session, "league", league=league))
 
-        tasks = [self.fetch_and_filter(session, event_id, league) for event_id in event_id_list]
+        tasks = [self.fetch_and_filter(session, event_id, league) for event_id in league_ids]
         results = await asyncio.gather(*tasks)
-
-
         flat_results = [market for sublist in results for market in sublist]
         return league, flat_results
 

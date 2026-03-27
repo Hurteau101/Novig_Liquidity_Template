@@ -70,64 +70,66 @@ class NovigAPI:
         }
 
     @staticmethod
-    def novig_market_caller(event_ids):
+    def novig_market_caller(event_id):
         """ Constructs a GraphQL query to fetch market data for a specific event."""
         return {
             "query": """
-            query ($eventIds: [uuid!]!) {
-              event(
-                where: {
-                  _and: [
-                    { id: { _in: $eventIds } },
-                    { _or: [
-                      { status: { _eq: "OPEN_PREGAME" } }
-                    ]}
-                  ]
-                }
-              ) {
-                description
-                id
-                game {
-                  scheduled_start
-                }
-                markets {
-                  description
-                  type
-                  strike
-                  player {
-                    full_name
-                  }
-                  outcomes(
+                query ($eventId: uuid!) {
+                  event(
                     where: {
-                      _or: [
-                        { last: { _is_null: false } },
-                        { available: { _is_null: false } },
+                      _and: [
+                        { id: { _eq: $eventId } },
+                        { _or: [
+                          { status: { _eq: "OPEN_PREGAME" } }
+                        ]}
                       ]
                     }
                   ) {
-                    id
                     description
-                    last
-                    available
-                    orders(
-                      where: {
-                        status: { _eq: "OPEN" },
-                        currency: { _eq: "CASH" },
-                      },
-                      order_by: { price: desc }
-                    ) {
-                      status
-                      qty
-                      price
-                      originalQty
-                      created_at
+                    id
+                    game {
+                      scheduled_start
+                    }
+                    markets {
+                      description
+                      type
+                      strike
+
+                      player {
+                        full_name
+                      }
+
+                      outcomes(
+                        where: {
+                          _or: [
+                            { last: { _is_null: false } },
+                            { available: { _is_null: false } },
+                          ]
+                        }
+                      ) {
+                        id
+                        description
+                        last
+                        available
+                        orders(
+                          where: {
+                            status: { _eq: "OPEN" },
+                            currency: { _eq: "CASH" },
+                          },
+                          order_by: { price: desc }
+                        ) {
+                          status
+                          qty
+                          price
+                          originalQty
+                          created_at
+                        }
+                      }
                     }
                   }
                 }
-              }
-            }
-            """,
+                """,
             "variables": {
-                "eventIds": event_ids
+                "eventId": event_id
             }
         }
