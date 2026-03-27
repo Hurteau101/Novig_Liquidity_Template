@@ -6,7 +6,7 @@ from .models import FilterList, LiquidityData, GameDetails, Player, Orders
 from .novig_api import NovigAPI
 
 class Novig:
-    def __init__(self, filters, filter_amount_dict):
+    def __init__(self, filters, filter_amount_dict = None):
         self.filters = FilterList(filter_data=filters)
         self._novig_api = NovigAPI()
         self.filter_dict = filter_amount_dict or {}
