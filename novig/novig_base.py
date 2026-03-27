@@ -160,7 +160,7 @@ class Novig:
             liqudity_difference = round(abs(over_liquidity_amount - under_liquidity_amount), 2)
 
             if liqudity_difference >= difference_amount:
-                data["liqudity_difference"] = liqudity_difference
+                data["liquidity_difference"] = liqudity_difference
                 results.append(data)
 
         return results
