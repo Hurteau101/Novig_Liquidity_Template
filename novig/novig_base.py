@@ -254,12 +254,12 @@ class Novig:
             order.get("price", 0) * order.get("qty", 0) for order in orders
         ) / total_qty
 
-        stat_type = stat_type.lower()
+        direction_description = direction_description.lower()
 
-        if stat_type == "moneyline" or stat_type == "spread":
-            side = direction_description
+        if direction_description in ["over", "under"]:
+            side = "over" if "over" in direction_description else "under"
         else:
-            side = "over" if "over" in direction_description.lower() else "under"
+            side = direction_description
 
         return {
             "total_win": round(highest["qty"] / 100, 2),
