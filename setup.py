@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="novig_liquidity",
-    version="1.0.14",
+    version="1.0.15",
     description="A Python wrapper for the Novig API with built-in filtering and liquidity validation.",
     author="Devon H",
     url="https://github.com/Hurteau101/Novig_Liquidity_Template",

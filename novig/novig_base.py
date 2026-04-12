@@ -271,7 +271,7 @@ class Novig:
             "side": side,
             "outcome_id": link_id,
             "mobile_link": f"https://novig.onelink.me/JHQQ/events/{link_id}",
-            "desktop_link": f"https://app.novig.us/events/{link_id}"
+            "desktop_link": f"https://novig.com/events/{link_id}"
         }
 
     def _extract_data(self, market_data, league):
