@@ -1,4 +1,17 @@
+import aiohttp
 import asyncio
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+if not os.getenv("PROXIES"):
+    raise ValueError("PROXIES env variable is not set")
+
+PROXIES = os.getenv("PROXIES")
+PROXY_LIST = PROXIES.split(",")
+
 
 class NovigAPI:
     async def query_caller(self, session, query_parameter, league=None, event_id=None):
@@ -17,29 +30,46 @@ class NovigAPI:
 
         arg = league if league is not None else event_id
 
-        return await NovigAPI.__default_caller(query_type[query_parameter](arg), session)
+        return await self.__default_caller(query_type[query_parameter](arg))
 
-    @staticmethod
-    async def __default_caller(query, session, retries=3, backoff=1.0):
+
+    async def __default_caller(self, query, backoff=1.0):
         headers = {"Content-Type": "application/json"}
-        for attempt in range(retries):
-            async with session.post("https://gql.novig.us/v1/graphql", headers=headers, json=query) as response:
-                data = await response.json()
 
-                if data.get("errors"):
-                    errors = data["errors"]
-                    is_timeout = any(
-                        e.get("extensions", {}).get("code") == "time-limit-exceeded"
-                        for e in errors
-                    )
-                    if is_timeout and attempt < retries - 1:
-                        wait = backoff * (2 ** attempt)
-                        await asyncio.sleep(wait)
-                        continue
-                    return {"data": {"event": []}}
+        for attempt, proxy in enumerate(PROXY_LIST, start=1):
+            if "@" not in proxy:
+                raise ValueError(f"Invalid proxy format: {proxy}")
 
-                if response.status == 200:
-                    return data
+            user_pass, host = proxy.split("@")
+            proxy_url = f"http://{host}"
+            username, password = user_pass.split(":")
+            auth = aiohttp.BasicAuth(username, password)
+
+            async with self.sem:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post("https://gql.novig.us/v1/graphql",
+                                            headers=headers,
+                                            json=query,
+                                            proxy=proxy_url,
+                                            proxy_auth=auth,
+                                            ) as response:
+                        data = await response.json()
+                        status = response.status
+
+            if data.get("errors"):
+                errors = data["errors"]
+                is_timeout = any(
+                    e.get("extensions", {}).get("code") == "time-limit-exceeded"
+                    for e in errors
+                )
+                if is_timeout:
+                    wait = backoff * (2 ** attempt)
+                    await asyncio.sleep(wait)
+                    continue
+                return {"data": {"event": []}}
+
+            if status == 200:
+                return data
 
         return {"data": {"event": []}}
 

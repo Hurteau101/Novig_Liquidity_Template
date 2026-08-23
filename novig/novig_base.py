@@ -327,6 +327,7 @@ class Novig:
 
     async def run(self):
         async with aiohttp.ClientSession() as session:
+            self._novig_api.sem = asyncio.Semaphore(5)
             results = await asyncio.gather(
                 *(self.fetch_data(session, league) for league in self.filters.get_leagues())
             )
@@ -339,6 +340,7 @@ class Novig:
         api = NovigAPI()
 
         async with aiohttp.ClientSession() as session:
+            api.sem = asyncio.Semaphore(5)
             # Fetch league-level data
             league_responses = await asyncio.gather(
                 *(api.query_caller(session, "league", league=league) for league in leagues)
