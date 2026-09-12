@@ -49,7 +49,9 @@ class NovigAPI:
 
             try:
                 async with self.sem:
-                    async with aiohttp.ClientSession() as session:
+                    async with aiohttp.ClientSession(
+                            timeout=aiohttp.ClientTimeout(total=30, connect=10)
+                    ) as session:
                         async with session.post("https://gql.novig.us/v1/graphql",
                                                 headers=headers,
                                                 json=query,
