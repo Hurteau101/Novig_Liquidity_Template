@@ -12,6 +12,8 @@ if not os.getenv("PROXIES"):
 PROXIES = os.getenv("PROXIES")
 PROXY_LIST = PROXIES.split(",")
 
+import logging
+log = logging.getLogger(__name__)
 
 class NovigAPI:
     async def query_caller(self, session, query_parameter, league=None, event_id=None):
@@ -45,31 +47,35 @@ class NovigAPI:
             username, password = user_pass.split(":")
             auth = aiohttp.BasicAuth(username, password)
 
-            async with self.sem:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post("https://gql.novig.us/v1/graphql",
-                                            headers=headers,
-                                            json=query,
-                                            proxy=proxy_url,
-                                            proxy_auth=auth,
-                                            ) as response:
-                        data = await response.json()
-                        status = response.status
+            try:
+                async with self.sem:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post("https://gql.novig.us/v1/graphql",
+                                                headers=headers,
+                                                json=query,
+                                                proxy=proxy_url,
+                                                proxy_auth=auth,
+                                                ) as response:
+                            data = await response.json()
+                            status = response.status
 
-            if data.get("errors"):
-                errors = data["errors"]
-                is_timeout = any(
-                    e.get("extensions", {}).get("code") == "time-limit-exceeded"
-                    for e in errors
-                )
-                if is_timeout:
-                    wait = backoff * (2 ** attempt)
-                    await asyncio.sleep(wait)
-                    continue
-                return {"data": {"event": []}}
+                if data.get("errors"):
+                    errors = data["errors"]
+                    is_timeout = any(
+                        e.get("extensions", {}).get("code") == "time-limit-exceeded"
+                        for e in errors
+                    )
+                    if is_timeout:
+                        wait = backoff * (2 ** attempt)
+                        await asyncio.sleep(wait)
+                        continue
+                    return {"data": {"event": []}}
 
-            if status == 200:
-                return data
+                if status == 200:
+                    return data
+            except aiohttp.ClientError as e:
+                log.warning("proxy %s failed: %s: %s", host, type(e).__name__, e)
+                continue
 
         return {"data": {"event": []}}
 
